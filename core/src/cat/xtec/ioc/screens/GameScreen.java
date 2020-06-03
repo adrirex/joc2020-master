@@ -26,7 +26,6 @@ import cat.xtec.ioc.objects.ScrollHandler;
 import cat.xtec.ioc.objects.Spacecraft;
 import cat.xtec.ioc.utils.Settings;
 
-
 public class GameScreen extends BaseScreen {
 
     // Els estats del joc
@@ -44,6 +43,7 @@ public class GameScreen extends BaseScreen {
     private Spacecraft spacecraft;
     private ScrollHandler scrollHandler;
     private int puntuacion = 0;
+    private int maxPuntuacion = 0;
 
     // Encarregats de dibuixar elements per pantalla
     private Batch batch;
@@ -53,8 +53,12 @@ public class GameScreen extends BaseScreen {
 
     // Preparem el textLayout per escriure text
     private GlyphLayout textLayout;
+    private GlyphLayout textHighPoints;
+    private GlyphLayout textNewHigh;
     private GlyphLayout textPoints;
 
+    //Boolean nuevo high score
+    private Boolean highscore=false;
 
     public GameScreen(Batch prevBatch, Viewport prevViewport, SpaceRace game) {
         super(game);
@@ -80,6 +84,12 @@ public class GameScreen extends BaseScreen {
         // Iniciem el GlyphLayout
         textLayout = new GlyphLayout();
         textLayout.setText(AssetManager.font, "Are you\nready?");
+
+        textNewHigh = new GlyphLayout();
+        textNewHigh.setText(AssetManager.font, "New High Score");
+
+        textHighPoints = new GlyphLayout();
+        textHighPoints.setText(AssetManager.font, "High Score: "+Integer.toString(maxPuntuacion));
 
         textPoints = new GlyphLayout();
         textPoints.setText(AssetManager.font, "Points: "+ Integer.toString(puntuacion));
@@ -136,6 +146,7 @@ public class GameScreen extends BaseScreen {
     }
 
     private void updateRunning(float delta) {
+        highscore = false;
         stage.act(delta);
         puntuacion++;
         batch.begin();
@@ -145,6 +156,12 @@ public class GameScreen extends BaseScreen {
             // Si hi ha hagut col·lisió: Reproduïm l'explosió i posem l'estat a GameOver
             AssetManager.explosionSound.play();
             stage.getRoot().findActor("spacecraft").remove();
+            if(puntuacion>maxPuntuacion){
+                maxPuntuacion=puntuacion;
+                textHighPoints.setText(AssetManager.font, "New High Score");
+                highscore = true;
+            }
+            textNewHigh.setText(AssetManager.font, "High Score: "+Integer.toString(maxPuntuacion));
             textLayout.setText(AssetManager.font, "Game Over :'(");
             textPoints.setText(AssetManager.font, "Points: "+ puntuacion);
             currentState = GameState.GAMEOVER;
@@ -157,6 +174,10 @@ public class GameScreen extends BaseScreen {
         batch.begin();
         puntuacion= 0;
         AssetManager.font.draw(batch, textLayout, (Settings.GAME_WIDTH - textLayout.width) / 2, (Settings.GAME_HEIGHT - textLayout.height) / 2);
+        AssetManager.font.draw(batch, textNewHigh, 52, 50);
+        if(highscore == true) {
+            AssetManager.font.draw(batch, textHighPoints, 56, 35);
+        }
         AssetManager.font.draw(batch, textPoints, 10, 5);
         // Si hi ha hagut col·lisió: Reproduïm l'explosió i posem l'estat a GameOver
         batch.draw((TextureRegion) AssetManager.explosionAnim.getKeyFrame(explosionTime, false), (spacecraft.getX() + spacecraft.getWidth() / 2) - 32, spacecraft.getY() + spacecraft.getHeight() / 2 - 32, 64, 64);
